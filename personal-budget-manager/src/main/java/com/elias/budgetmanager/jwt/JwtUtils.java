@@ -41,6 +41,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setSubject(userDetails.getUsername())
+                .claim("userId",userDetails.getId())
                 .claim("nickname", userDetails.getNickname())
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
