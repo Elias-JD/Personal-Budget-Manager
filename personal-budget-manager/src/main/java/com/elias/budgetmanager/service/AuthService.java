@@ -3,6 +3,8 @@ package com.elias.budgetmanager.service;
 import com.elias.budgetmanager.dto.AuthResponse;
 import com.elias.budgetmanager.dto.LoginRequest;
 import com.elias.budgetmanager.dto.RegisterRequest;
+import com.elias.budgetmanager.exception.ResourceAlreadyExistsException;
+import com.elias.budgetmanager.exception.ResourceNotFoundException;
 import com.elias.budgetmanager.jwt.JwtUtils;
 import com.elias.budgetmanager.model.CustomUserDetails;
 import com.elias.budgetmanager.model.Role;
@@ -10,6 +12,7 @@ import com.elias.budgetmanager.model.User;
 import com.elias.budgetmanager.model.enums.RoleName;
 import com.elias.budgetmanager.repository.RoleRepository;
 import com.elias.budgetmanager.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,15 +40,15 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())){
-            throw new RuntimeException("Email already in use");
+            throw new ResourceAlreadyExistsException("Email already in use");
         }
 
         if (userRepository.existsByUsername(request.username())){
-            throw new RuntimeException("Username already taken");
+            throw new ResourceAlreadyExistsException("Username already taken");
         }
 
         Role role = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Role Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role Not Found"));
 
         User user = new User();
 
@@ -76,7 +79,7 @@ public class AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
         if (userDetails == null) {
-            throw new RuntimeException("Internal error: User data could not be obtained");
+            throw new AccessDeniedException("Internal error: User data could not be obtained");
         }
 
         String token = jwtUtils.generateJwtToken(userDetails);
